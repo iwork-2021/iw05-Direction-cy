@@ -48,57 +48,58 @@ conda env create -f turienv.yaml
 rows是Dataframe有一系列结果
 将原先的坐标对角顶点式转为中心+边长的像素式
 
-  for date, row in rows.iterrows():
-    img_annotations.append({coordinates: {height: (row["y_max"] - row["y_min"]) * img_height,       
-                                          width: (row["x_max"] - row["x_min"]) * img_width,
-    "                                     x: (row["x_max"] + row["x_min"]) / 2 * img_width,
-    "                                     y: (row["y_max"] + row["y_min"]) / 2 * img_height},
-    "                       label: row["class_name"]})
+
+    for date, row in rows.iterrows():
+      img_annotations.append({coordinates: {height: (row["y_max"] - row["y_min"]) * img_height,       
+                                            width: (row["x_max"] - row["x_min"]) * img_width,
+    "                                       x: (row["x_max"] + row["x_min"]) / 2 * img_width,
+    "                                       y: (row["y_max"] + row["y_min"]) / 2 * img_height},
+    "                         label: row["class_name"]})
 
 ## app中的处理 
 
-  func processObservations(for request: VNRequest, error: Error?) {
-      DispatchQueue.main.async {
-        //得到所有结果
-        let results = request.results as? [VNRecognizedObjectObservation]
-        if results != nil{
-          //展示结果
-          self.show(predictions: results!)
-        }
-        else{
-          //隐藏结果
-          self.hide()
-        }
-      }
-  }
-
-  func show(predictions: [VNRecognizedObjectObservation]) {
-      var i = 0;
-      for prediction in predictions {
-          //不能超限
-          if i >= maxBoundingBoxViews{
-              return
-          }
-          let result = prediction.labels[0]
-          //选择比较匹配的结果
-          if (result.confidence > 0.6){
-              let label = String(format:"%@: %.1f%%", result.identifier, result.confidence * 100)
-              let bx = prediction.boundingBox
-              //将boundingBox转换成合适的frame
-              let frame = VNImageRectForNormalizedRect(bx, Int(self.view.bounds.width), Int(self.view.bounds.height))
-              let color = colors[result.identifier]!
-              let boundingBoxView = boundingBoxViews[i]
-              //显示
-              boundingBoxView.show(frame: frame, label: label, color: color)
-              i += 1;
+    func processObservations(for request: VNRequest, error: Error?) {
+        DispatchQueue.main.async {
+          //得到所有结果
+          let results = request.results as? [VNRecognizedObjectObservation]
+          if results != nil{
+            //展示结果
+            self.show(predictions: results!)
           }
           else{
-              continue
+            //隐藏结果
+            self.hide()
           }
+        }
+    }
+
+    func show(predictions: [VNRecognizedObjectObservation]) {
+      var i = 0;
+      for prediction in predictions {
+        //不能超限
+        if i >= maxBoundingBoxViews{
+          return
+        }
+        let result = prediction.labels[0]
+        //选择比较匹配的结果
+        if (result.confidence > 0.6){
+          let label = String(format:"%@: %.1f%%", result.identifier, result.confidence * 100)
+          let bx = prediction.boundingBox
+          //将boundingBox转换成合适的frame
+          let frame = VNImageRectForNormalizedRect(bx, Int(self.view.bounds.width), Int(self.view.bounds.height))
+          let color = colors[result.identifier]!
+          let boundingBoxView = boundingBoxViews[i]
+          //显示
+          boundingBoxView.show(frame: frame, label: label, color: color)
+          i += 1;
+        }
+        else{
+          continue
+        }
       }
       //如果新的结果不适合，隐藏上次的结果
       if i == 0{
-          self.hide()
+        self.hide()
       }
-  }
-}
+    }
+
