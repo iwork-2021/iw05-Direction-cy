@@ -181,10 +181,48 @@ class ViewController: UIViewController {
 
   func processObservations(for request: VNRequest, error: Error?) {
     //call show function
+      DispatchQueue.main.async {
+          let results = request.results as? [VNRecognizedObjectObservation]
+          if results != nil{
+              self.show(predictions: results!)
+          }
+          else{
+              self.hide()
+          }
+      }
   }
+    
+    func hide(){
+        for i in 0..<maxBoundingBoxViews {
+            boundingBoxViews[i].hide()
+        }
+    }
 
   func show(predictions: [VNRecognizedObjectObservation]) {
    //process the results, call show function in BoundingBoxView
+      var i = 0;
+      for prediction in predictions {
+          if i >= maxBoundingBoxViews{
+              return
+          }
+          let result = prediction.labels[0]
+          if (result.confidence > 0.6){
+              let label = String(format:"%@: %.1f%%", result.identifier, result.confidence * 100)
+              let bx = prediction.boundingBox
+              let frame = VNImageRectForNormalizedRect(bx, Int(self.view.bounds.width), Int(self.view.bounds.height))
+              let color = colors[result.identifier]!
+              let boundingBoxView = boundingBoxViews[i]
+              boundingBoxView.show(frame: frame, label: label, color: color)
+              i += 1;
+          }
+          else{
+              continue
+          }
+      }
+      if i == 0{
+          self.hide()
+      }
+  }
 }
 
 extension ViewController: VideoCaptureDelegate {
